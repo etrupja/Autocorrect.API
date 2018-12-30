@@ -39,22 +39,20 @@ namespace Autocorrect.API.Controllers
             //        Console.WriteLine($"{dr.ItemArray[1].ToString().ToLower()} - {dr.ItemArray[0].ToString().ToLower()}");
             //        allWords.Add(new SpecialWord()
             //        {
-            //            WordWrong = dr.ItemArray[1].ToString().ToLower(),
-            //            WordRight = dr.ItemArray[0].ToString().ToLower()
+            //            WrongWord = dr.ItemArray[1].ToString().ToLower(),
+            //            RightWord = dr.ItemArray[0].ToString().ToLower()
             //        });
             //    }
 
-            //    List<SpecialWord> allWordsFiltered = allWords
-            //        .Where(n => n.WordWrong != n.WordRight && n.WordRight != "" && n.WordWrong != "").ToList();
+            //    List<SpecialWord> distinctWords = allWords.GroupBy(x => x.WrongWord).Select(y => y.First()).ToList();
 
-            //    //_context.SpecialWords.AddRangeAsync(allWordsFiltered);
-            //    //_context.SaveChangesAsync();
-
-            //    foreach (SpecialWord word in allWordsFiltered)
+            //    foreach (SpecialWord word in distinctWords)
             //    {
+            //        //if (!SpecialWordExists(word.WrongWord))
             //        _context.SpecialWords.Add(word);
-            //        _context.SaveChanges();
             //    }
+
+            //    _context.SaveChanges();
 
             //    string json = JsonConvert.SerializeObject(excelContent);
             //    return json;
@@ -66,6 +64,10 @@ namespace Autocorrect.API.Controllers
             //}
         }
 
+        private bool SpecialWordExists(string wrongWord)
+        {
+            return _context.SpecialWords.Any(e => e.WrongWord == wrongWord);
+        }
 
         public static DataSet ParseExcel(string excelURL)
         {

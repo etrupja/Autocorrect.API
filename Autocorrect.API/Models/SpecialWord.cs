@@ -9,9 +9,7 @@ namespace Autocorrect.API.Models
     public class SpecialWord
     {
         [Key]
-        public int Id { get; set; }
-
-        public string WordWrong { get; set; }
-        public string WordRight { get; set; }
+        public string WrongWord { get; set; }
+        public string RightWord { get; set; }
     }
 }

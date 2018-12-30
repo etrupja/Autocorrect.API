@@ -20,15 +20,12 @@ namespace Autocorrect.API.Migrations
 
             modelBuilder.Entity("Autocorrect.API.Models.SpecialWord", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<string>("WrongWord")
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("WordRight");
+                    b.Property<string>("RightWord");
 
-                    b.Property<string>("WordWrong");
-
-                    b.HasKey("Id");
+                    b.HasKey("WrongWord");
 
                     b.ToTable("SpecialWords");
                 });

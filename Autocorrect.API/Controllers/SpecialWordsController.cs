@@ -37,26 +37,26 @@ namespace Autocorrect.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var specialWord = _context.SpecialWords.FirstOrDefault(n => n.WordWrong.ToLower() == id);
+            var specialWord = await _context.SpecialWords.FindAsync(id);
 
             if (specialWord == null)
             {
                 return NotFound();
             }
 
-            return Ok(specialWord.WordRight);
+            return Ok(specialWord);
         }
 
         // PUT: api/SpecialWords/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSpecialWord([FromRoute] int id, [FromBody] SpecialWord specialWord)
+        public async Task<IActionResult> PutSpecialWord([FromRoute] string id, [FromBody] SpecialWord specialWord)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (id != specialWord.Id)
+            if (id != specialWord.WrongWord)
             {
                 return BadRequest();
             }
@@ -94,12 +94,12 @@ namespace Autocorrect.API.Controllers
             _context.SpecialWords.Add(specialWord);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetSpecialWord", new { id = specialWord.Id }, specialWord);
+            return CreatedAtAction("GetSpecialWord", new { id = specialWord.WrongWord }, specialWord);
         }
 
         // DELETE: api/SpecialWords/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSpecialWord([FromRoute] int id)
+        public async Task<IActionResult> DeleteSpecialWord([FromRoute] string id)
         {
             if (!ModelState.IsValid)
             {
@@ -118,9 +118,9 @@ namespace Autocorrect.API.Controllers
             return Ok(specialWord);
         }
 
-        private bool SpecialWordExists(int id)
+        private bool SpecialWordExists(string id)
         {
-            return _context.SpecialWords.Any(e => e.Id == id);
+            return _context.SpecialWords.Any(e => e.WrongWord == id);
         }
     }
 }

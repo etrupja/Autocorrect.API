@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Autocorrect.API.Migrations
 {
@@ -11,14 +10,12 @@ namespace Autocorrect.API.Migrations
                 name: "SpecialWords",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    WordWrong = table.Column<string>(nullable: true),
-                    WordRight = table.Column<string>(nullable: true)
+                    WrongWord = table.Column<string>(nullable: false),
+                    RightWord = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SpecialWords", x => x.Id);
+                    table.PrimaryKey("PK_SpecialWords", x => x.WrongWord);
                 });
         }
 
