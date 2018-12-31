@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Autocorrect.API.Data;
 using Autocorrect.API.Models;
+using Microsoft.AspNetCore.Cors;
 
 namespace Autocorrect.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors("AllowAll")]
     public class SpecialWordsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -28,16 +30,16 @@ namespace Autocorrect.API.Controllers
             return _context.SpecialWords;
         }
 
-        // GET: api/SpecialWords/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetSpecialWord([FromRoute] string id)
+        // GET: api/SpecialWords/wrongWord
+        [HttpGet("{wrongWord}")]
+        public async Task<IActionResult> GetSpecialWord([FromRoute] string wrongWord)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var specialWord = await _context.SpecialWords.FindAsync(id);
+            var specialWord = await _context.SpecialWords.FindAsync(wrongWord);
 
             if (specialWord == null)
             {
@@ -47,16 +49,16 @@ namespace Autocorrect.API.Controllers
             return Ok(specialWord);
         }
 
-        // PUT: api/SpecialWords/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutSpecialWord([FromRoute] string id, [FromBody] SpecialWord specialWord)
+        // PUT: api/SpecialWords/wrongWord
+        [HttpPut("{wrongWord}")]
+        public async Task<IActionResult> PutSpecialWord([FromRoute] string wrongWord, [FromBody] SpecialWord specialWord)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (id != specialWord.WrongWord)
+            if (wrongWord != specialWord.WrongWord)
             {
                 return BadRequest();
             }
@@ -69,7 +71,7 @@ namespace Autocorrect.API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!SpecialWordExists(id))
+                if (!SpecialWordExists(wrongWord))
                 {
                     return NotFound();
                 }
@@ -97,16 +99,16 @@ namespace Autocorrect.API.Controllers
             return CreatedAtAction("GetSpecialWord", new { id = specialWord.WrongWord }, specialWord);
         }
 
-        // DELETE: api/SpecialWords/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSpecialWord([FromRoute] string id)
+        // DELETE: api/SpecialWords/wrongWord
+        [HttpDelete("{wrongWord}")]
+        public async Task<IActionResult> DeleteSpecialWord([FromRoute] string wrongWord)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var specialWord = await _context.SpecialWords.FindAsync(id);
+            var specialWord = await _context.SpecialWords.FindAsync(wrongWord);
             if (specialWord == null)
             {
                 return NotFound();
@@ -118,9 +120,9 @@ namespace Autocorrect.API.Controllers
             return Ok(specialWord);
         }
 
-        private bool SpecialWordExists(string id)
+        private bool SpecialWordExists(string wrongWord)
         {
-            return _context.SpecialWords.Any(e => e.WrongWord == id);
+            return _context.SpecialWords.Any(e => e.WrongWord == wrongWord);
         }
     }
 }
