@@ -93,10 +93,18 @@ namespace Autocorrect.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            _context.SpecialWords.Add(specialWord);
-            await _context.SaveChangesAsync();
+            if (SpecialWordExists(specialWord.WrongWord))
+            {
+                return BadRequest("Fjala existon");
+            }
+            else
+            {
+                _context.SpecialWords.Add(specialWord);
+                await _context.SaveChangesAsync();
+            }
 
-            return CreatedAtAction("GetSpecialWord", new { id = specialWord.WrongWord }, specialWord);
+
+            return CreatedAtAction("GetSpecialWord", new { wrongWord = specialWord.WrongWord }, specialWord);
         }
 
         // DELETE: api/SpecialWords/wrongWord
