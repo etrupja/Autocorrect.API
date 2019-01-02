@@ -11,5 +11,8 @@ namespace Autocorrect.API.Models
         [Key]
         public string WrongWord { get; set; }
         public string RightWord { get; set; }
+        public DateTime? DateAdded { get; set; }
+        public DateTime? DateUpdated { get; set; }
+        public DateTime? DateRetreived { get; set; }
     }
 }

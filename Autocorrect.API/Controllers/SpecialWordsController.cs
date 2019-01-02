@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Autocorrect.API.Data;
 using Autocorrect.API.Models;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Routing;
+using Autocorrect.API.ResponseModels;
 
 namespace Autocorrect.API.Controllers
 {
@@ -25,9 +27,58 @@ namespace Autocorrect.API.Controllers
 
         // GET: api/SpecialWords
         [HttpGet]
-        public IEnumerable<SpecialWord> GetSpecialWords()
+        [Route("getallwords")]
+        public IEnumerable<SpecialWordResponse> GetAllWords()
         {
-            return _context.SpecialWords;
+            List<SpecialWordResponse> response = _context.SpecialWords.Select(n => new SpecialWordResponse()
+            {
+                WrongWord = n.WrongWord,
+                RightWord = n.RightWord
+            }).ToList();
+
+            return response;
+        }
+
+        [HttpGet]
+        [Route("getupdatedwords")]
+        public IEnumerable<SpecialWordResponse> GetUpdatedWords()
+        {
+            List<SpecialWordResponse> response = _context.SpecialWords
+                .Where(n => n.DateUpdated != null)
+                .Select(n => new SpecialWordResponse()
+                {
+                    WrongWord = n.WrongWord,
+                    RightWord = n.RightWord
+                }).ToList();
+
+            return response;
+        }
+
+        [HttpGet]
+        [Route("getnewwords")]
+        public IEnumerable<SpecialWordResponse> GetNewWords()
+        {
+            var newWords = _context.SpecialWords.Where(n => n.DateRetreived == null);
+            List<SpecialWordResponse> response = new List<SpecialWordResponse>();
+
+            if (newWords != null)
+            {
+                foreach (SpecialWord newWord in newWords)
+                {
+                    //Set the Date the update was received
+                    newWord.DateRetreived = DateTime.UtcNow.AddHours(2);
+
+                    //Add the words to the response List
+                    response.Add(new SpecialWordResponse()
+                    {
+                        WrongWord = newWord.WrongWord,
+                        RightWord = newWord.RightWord
+                    });
+                }
+                _context.SaveChanges();
+            }
+
+            return response;
         }
 
         // GET: api/SpecialWords/wrongWord
@@ -63,7 +114,12 @@ namespace Autocorrect.API.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(specialWord).State = EntityState.Modified;
+            //Set DateRetreived to null
+            SpecialWord oldSpecialWord = GetSingleSpecialWord(wrongWord);
+            //oldSpecialWord.WrongWord = specialWord.WrongWord;
+            oldSpecialWord.RightWord = specialWord.RightWord;
+            oldSpecialWord.DateRetreived = null;
+            oldSpecialWord.DateUpdated = DateTime.UtcNow.AddHours(2);
 
             try
             {
@@ -99,6 +155,7 @@ namespace Autocorrect.API.Controllers
             }
             else
             {
+                specialWord.DateAdded = DateTime.UtcNow.AddHours(2);
                 _context.SpecialWords.Add(specialWord);
                 await _context.SaveChangesAsync();
             }
@@ -131,6 +188,11 @@ namespace Autocorrect.API.Controllers
         private bool SpecialWordExists(string wrongWord)
         {
             return _context.SpecialWords.Any(e => e.WrongWord == wrongWord);
+        }
+
+        private SpecialWord GetSingleSpecialWord(string wrongWord)
+        {
+            return _context.SpecialWords.FirstOrDefault(e => e.WrongWord == wrongWord);
         }
     }
 }
