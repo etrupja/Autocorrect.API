@@ -1,12 +1,11 @@
 ﻿using Autocorrect.API.Data;
+using Autocorrect.API.Data.DbEntities;
+using Autocorrect.API.Models;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Portable.Licensing;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Autocorrect.API.Controllers
 {
@@ -16,34 +15,83 @@ namespace Autocorrect.API.Controllers
     public class LicenseController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly LicenseSettings _licenseSettings;
 
-        public LicenseController(AppDbContext context)
+        public LicenseController(AppDbContext context, LicenseSettings licenseSettings)
         {
             _context = context;
+            _licenseSettings = licenseSettings;
         }
 
-        // GET: api/SpecialWords
-        [HttpGet]
-        public IActionResult Get()
+        /// <summary>
+        /// Used to create a new license
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult New(CreateLicenseModel input)
         {
-            var passPhrase = "Nertil";
-            var keyGenerator = Portable.Licensing.Security.Cryptography.KeyGenerator.Create();
-            var keyPair = keyGenerator.GenerateKeyPair();
-            var privateKey = keyPair.ToEncryptedPrivateKeyString(passPhrase);
-            var publicKey = keyPair.ToPublicKeyString();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            var licenseId = Guid.NewGuid();
+
+            //create license
             var license = License.New()
-            .WithUniqueIdentifier(Guid.NewGuid())
+            .WithUniqueIdentifier(licenseId)
             .As(LicenseType.Standard)
-    .ExpiresAt(DateTime.Now.AddYears(1))
-    .WithMaximumUtilization(1)
-    .LicensedTo("Nertil Poci", "nertilpoci@hotmail.com")
-    .WithAdditionalAttributes(x=>x.Add("MachineKey", "0f39c1df-2b70-4c65-a6c6-f9f2b540990e"))
-    .CreateAndSignWithPrivateKey(privateKey, passPhrase);
+            .ExpiresAt(DateTime.Now.AddYears(1))
+            .WithMaximumUtilization(1)
+            .LicensedTo(input.Name, input.Email)
+            .CreateAndSignWithPrivateKey(_licenseSettings.PrivateKey, _licenseSettings.PassPhrase);
+
+            //save license
+            var dbLicense = new Licenses
+            {
+                Id = licenseId,
+                MaxUtilization = input.MaximumUtilizationCount,
+                ExpiresOn = DateTime.Now.AddYears(1),
+                Status = Enums.LicenseStatus.Valid
+            };
+            _context.Licenses.Add(dbLicense);
+            _context.SaveChanges();
+
             var licenseFile = new MemoryStream();
             license.Save(licenseFile);
             return File(licenseFile.ToArray(), "application/x-enterlicense", "License.lic");
         }
 
+        /// <summary>
+        /// Used to check if license has no been used mor then it can be
+        /// </summary>
+        /// <param name="licenseId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("isvalid/{licenseId}")]
+        public IActionResult IsLicenseValid(Guid licenseId)
+        {
+            var license = _context.Licenses.Find(licenseId);
+            if (license == null) return Ok(false);
+
+            return Ok(license.MaxUtilization != license.Utilized);
+            
+        }
+
+        /// <summary>
+        /// Called when license is activated to set the increated the utilized count so no licensei s used more then it should
+        /// </summary>
+        /// <param name="licenseId"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("setusage/{licenseId}")]
+        public IActionResult SetUssage(Guid licenseId)
+        {
+            var license = _context.Licenses.Find(licenseId);
+            if (license == null) return NotFound();
+            license.Utilized += 1;
+
+            _context.SaveChanges();
+            return Ok();
+
+        }
     }
 }
