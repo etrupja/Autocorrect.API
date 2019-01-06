@@ -54,7 +54,6 @@ namespace Autocorrect.API.Controllers
         /// <param name="input"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("new")]
         public IActionResult New(CreateLicenseModel input)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -103,7 +102,7 @@ namespace Autocorrect.API.Controllers
             if (license == null) return Ok(false);
 
             return Ok(license.MaxUtilization != license.Utilized);
-
+            
         }
 
         /// <summary>
