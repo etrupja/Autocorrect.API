@@ -33,7 +33,7 @@ namespace Autocorrect.API.Controllers
         public IActionResult Get()
         {
             var userId = GetCurrentUser();
-            var licenses = _context.Licenses.Where(z => z.UserId == userId);
+            var licenses = _context.Licenses; //.Where(z => z.UserId == userId);
             return Ok(licenses);
                
         }
@@ -54,6 +54,7 @@ namespace Autocorrect.API.Controllers
         /// <param name="input"></param>
         /// <returns></returns>
         [HttpPost]
+        [Route("new")]
         public IActionResult New(CreateLicenseModel input)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
