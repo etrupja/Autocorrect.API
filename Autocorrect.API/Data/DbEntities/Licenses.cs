@@ -15,5 +15,7 @@ namespace Autocorrect.API.Data.DbEntities
         public int Utilized { get; set; }
         public DateTime ExpiresOn { get; set; }
         public LicenseStatus Status { get; set; }
+        public Guid UserId { get; set; }
+        public byte[] LicenseFile { get; set; }
     }
 }

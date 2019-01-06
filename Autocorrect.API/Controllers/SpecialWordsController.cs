@@ -10,12 +10,14 @@ using Autocorrect.API.Models;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Routing;
 using Autocorrect.API.ResponseModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Autocorrect.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [EnableCors("AllowAll")]
+    [Authorize]
     public class SpecialWordsController : ControllerBase
     {
         private readonly AppDbContext _context;
