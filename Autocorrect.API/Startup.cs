@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Stripe;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace Autocorrect.API
@@ -55,6 +56,9 @@ namespace Autocorrect.API
                     options.ApiName = identityServerAuthOptions.ApiName;
                 });
 
+            //Stripe configuration
+            services.Configure<StripeSettings>(Configuration.GetSection("Stripe"));
+
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
             {
@@ -75,6 +79,9 @@ namespace Autocorrect.API
             }
             app.UseAuthentication();
             app.UseHttpsRedirection();
+
+            //Stripe configuration
+            StripeConfiguration.SetApiKey(Configuration.GetSection("Stripe")["SecretKey"]);
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
