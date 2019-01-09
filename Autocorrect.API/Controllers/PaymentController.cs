@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Autocorrect.API.ResponseModels;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,24 +19,34 @@ namespace Autocorrect.API.Controllers
         [HttpPost]
         public IActionResult Charge(object token)
         {
+            string tokenString = token.ToString();
+            TokenResponse tokenResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<TokenResponse>(tokenString);
+
             var customers = new CustomerService();
             var charges = new ChargeService();
+            try
+            {
+                var customer = customers.Create(new CustomerCreateOptions
+                {
+                    Email = tokenResponse.token.email,
+                    SourceToken = tokenResponse.token.id
+                });
+
+                var charge = charges.Create(new ChargeCreateOptions
+                {
+                    Amount = tokenResponse.token.price * 100, //5$ = 500cents
+                    Description = "Licensa TeksSakte",
+                    Currency = "all",
+                    CustomerId = customer.Id
+                });
+
+                return Ok(charge);
+            }
+            catch
+            {
+                return BadRequest("Pagesa nuk u procesua!");
+            }
             
-            var customer = customers.Create(new CustomerCreateOptions
-            {
-                //Email = chargeModel.stripeEmail,
-                //SourceToken = chargeModel.stripeToken
-            });
-
-            var charge = charges.Create(new ChargeCreateOptions
-            {
-                Amount = 500, //5$ = 500cents
-                Description = "Sample Charge",
-                Currency = "usd",
-                CustomerId = customer.Id
-            });
-
-            return Ok(charge);
         }
 
         [Route("chargetest")]
@@ -44,11 +55,5 @@ namespace Autocorrect.API.Controllers
         {
             return Ok("tested");
         }
-    }
-
-    public class ChargeModel
-    {
-        public object token;
-        public string amount;
     }
 }
