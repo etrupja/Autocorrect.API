@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autocorrect.API.Data;
 using Autocorrect.API.Models;
+using Autocorrect.API.Services;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -48,6 +49,9 @@ namespace Autocorrect.API
             services.AddSingleton(Configuration.GetSection("Licensing").Get<LicenseSettings>());
             var identityServerAuthOptions = Configuration.GetSection("Identity").Get<IdentityServerAuthenticationOptions>();
 
+            //configure services
+            services.AddTransient<ILicenseService, LicenseService>();
+
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
                 {
@@ -86,9 +90,9 @@ namespace Autocorrect.API
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
             app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "Autocorrect API V1");});
+            app.UseCors("AllowAll");
 
             app.UseMvc();
-            app.UseCors("AllowAll");
         }
     }
 }

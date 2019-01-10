@@ -8,6 +8,7 @@ namespace Autocorrect.API.Enums
     public enum LicenseStatus
     {
         Valid =1,
-        Expired=2
+        Paid = 2,
+        Expired =3
     }
 }

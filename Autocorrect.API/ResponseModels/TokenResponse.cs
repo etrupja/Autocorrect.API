@@ -22,6 +22,9 @@ namespace Autocorrect.API.ResponseModels
         public string type { get; set; }
         public bool used { get; set; }
         public long price { get; set; }
+        public string client_name { get; set; }
+        public string client_email { get; set; }
+        public int maximum_utilization_count { get; set; }
     }
 
     public class Card
