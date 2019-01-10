@@ -9,6 +9,6 @@ namespace Autocorrect.API.Services
 {
     public interface ILicenseService
     {
-        Licenses CreateLicense(CreateLicenseModel input);
+        Licenses CreateLicense(CreateLicenseModel input, Guid userId);
     }
 }

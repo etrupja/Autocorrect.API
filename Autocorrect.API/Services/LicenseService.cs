@@ -22,10 +22,9 @@ namespace Autocorrect.API.Services
             _licenseSettings = licenseSettings;
         }
 
-        public Licenses CreateLicense(CreateLicenseModel input)
+        public Licenses CreateLicense(CreateLicenseModel input, Guid userId)
         {
             var licenseId = Guid.NewGuid();
-            var userId = Guid.NewGuid(); //get user id
             //create license
             var license = Portable.Licensing.License.New()
                 .WithUniqueIdentifier(licenseId)
@@ -44,7 +43,7 @@ namespace Autocorrect.API.Services
                 Status = Enums.LicenseStatus.Valid,
                 UserId = userId
             };
-
+            _context.SaveChanges();
             return dbLicense;
         }
     }

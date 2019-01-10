@@ -1,11 +1,13 @@
 ﻿using Autocorrect.API.Data;
 using Autocorrect.API.Data.DbEntities;
 using Autocorrect.API.Models;
+using Autocorrect.API.Services;
 using IdentityModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Portable.Licensing;
+using Stripe;
 using System;
 using System.IO;
 using System.Linq;
@@ -20,11 +22,16 @@ namespace Autocorrect.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly LicenseSettings _licenseSettings;
-
-        public LicenseController(AppDbContext context, LicenseSettings licenseSettings)
+        private readonly CustomerService _customerService;
+        private readonly ChargeService _chargeService;
+        private readonly ILicenseService _licenseService;
+        public LicenseController(AppDbContext context, LicenseSettings licenseSettings, ILicenseService licenseService)
         {
             _context = context;
             _licenseSettings = licenseSettings;
+            _customerService = new CustomerService();
+            _chargeService = new ChargeService();
+            _licenseService = licenseService;
         }
 
 
@@ -33,7 +40,7 @@ namespace Autocorrect.API.Controllers
         public IActionResult Get()
         {
             var userId = GetCurrentUser();
-            var licenses = _context.Licenses; //.Where(z => z.UserId == userId);
+            var licenses = _context.Licenses.Where(z => z.UserId == userId);
             return Ok(licenses);
                
         }
@@ -60,34 +67,37 @@ namespace Autocorrect.API.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
             var userId = GetCurrentUser();
 
-            var licenseId = Guid.NewGuid();
+            const int licensePrice = 2000;
 
-            //create license
-            var license = License.New()
-            .WithUniqueIdentifier(licenseId)
-            .As(LicenseType.Standard)
-            .ExpiresAt(DateTime.Now.AddYears(1))
-            .WithMaximumUtilization(1)
-            .LicensedTo(input.Name, input.Email)
-            .CreateAndSignWithPrivateKey(_licenseSettings.PrivateKey, _licenseSettings.PassPhrase);
 
-            //save license
-            var dbLicense = new Licenses
-            {
-                Id = licenseId,
-                MaxUtilization = input.MaximumUtilizationCount,
-                ExpiresOn = DateTime.Now.AddYears(1),
-                Status = Enums.LicenseStatus.Valid,
-                UserId= userId
-            };
-            var licenseFile = new MemoryStream();
-            license.Save(licenseFile);
-            _context.Licenses.Add(dbLicense);
-            dbLicense.LicenseFile = licenseFile.ToArray();
-            _context.SaveChanges();
+                //create customer
+                var customer = _customerService.Create(new CustomerCreateOptions
+                {
+                    Email = input.Email,
+                    SourceToken = input.Token
+                });
 
-           
-            return File(licenseFile.ToArray(), "application/x-enterlicense", "License.lic");
+                //create a charge/transaction
+                var charge = _chargeService.Create(new ChargeCreateOptions
+                {
+                    Amount = input.MaximumUtilizationCount * licensePrice * 100,// Better calculationis
+                    Description = $"Pagese per {input.MaximumUtilizationCount} Licensa TekstSakte per {input.Name} ({input.Email})",
+                    Currency = "all",
+                    CustomerId = customer.Id
+                });
+
+                //check status
+                if (!IsPaymentValid(charge)) return BadRequest(charge.FailureMessage);
+                //create a license
+                var licenseModel = new CreateLicenseModel()
+                {
+                    Email = input.Email,
+                    Name = input.Name,
+                    MaximumUtilizationCount = input.MaximumUtilizationCount
+                };
+                var newLicense = _licenseService.CreateLicense(licenseModel,GetCurrentUser());
+                return Ok();
+
         }
 
         /// <summary>
@@ -122,6 +132,11 @@ namespace Autocorrect.API.Controllers
             _context.SaveChanges();
             return Ok();
 
+        }
+        private bool IsPaymentValid(Charge charge)
+        {
+            //Validate if payment is valid
+            return charge!=null && charge.Paid;
         }
         private Guid GetCurrentUser()
         {
