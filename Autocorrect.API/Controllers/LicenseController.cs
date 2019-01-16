@@ -105,6 +105,7 @@ namespace Autocorrect.API.Controllers
         /// </summary>
         /// <param name="licenseId"></param>
         /// <returns></returns>
+        [AllowAnonymous]
         [HttpGet]
         [Route("isvalid/{licenseId}")]
         public IActionResult IsLicenseValid(Guid licenseId)
@@ -121,6 +122,7 @@ namespace Autocorrect.API.Controllers
         /// </summary>
         /// <param name="licenseId"></param>
         /// <returns></returns>
+         [AllowAnonymous]
         [HttpPost]
         [Route("setusage/{licenseId}")]
         public IActionResult SetUssage(Guid licenseId)
