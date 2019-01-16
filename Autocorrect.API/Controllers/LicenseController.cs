@@ -64,10 +64,10 @@ namespace Autocorrect.API.Controllers
         [Route("new")]
         public IActionResult New(CreateLicenseModel input)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            var userId = GetCurrentUser();
+                if (!ModelState.IsValid) return BadRequest(ModelState);
+                var userId = GetCurrentUser();
 
-            const int licensePrice = 2000;
+                const int licensePrice = 2000;
 
 
                 //create customer
@@ -97,7 +97,6 @@ namespace Autocorrect.API.Controllers
                 };
                 var newLicense = _licenseService.CreateLicense(licenseModel,GetCurrentUser());
                 return Ok();
-
         }
 
         /// <summary>
