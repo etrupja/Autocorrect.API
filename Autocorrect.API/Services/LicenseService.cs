@@ -3,11 +3,7 @@ using Autocorrect.API.Data.DbEntities;
 using Autocorrect.API.Models;
 using Portable.Licensing;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Autocorrect.API.Services
 {
@@ -22,10 +18,9 @@ namespace Autocorrect.API.Services
             _licenseSettings = licenseSettings;
         }
 
-        public Licenses CreateLicense(CreateLicenseModel input)
+        public Licenses CreateLicense(CreateLicenseModel input, Guid userId)
         {
             var licenseId = Guid.NewGuid();
-            var userId = Guid.NewGuid(); //get user id
             //create license
             var license = Portable.Licensing.License.New()
                 .WithUniqueIdentifier(licenseId)
@@ -34,8 +29,6 @@ namespace Autocorrect.API.Services
                 .WithMaximumUtilization(1)
                 .LicensedTo(input.Name, input.Email)
                 .CreateAndSignWithPrivateKey(_licenseSettings.PrivateKey, _licenseSettings.PassPhrase);
-
-            //save license
             var dbLicense = new Licenses
             {
                 Id = licenseId,
@@ -43,8 +36,16 @@ namespace Autocorrect.API.Services
                 ExpiresOn = DateTime.Now.AddYears(1),
                 Status = Enums.LicenseStatus.Valid,
                 UserId = userId
-            };
 
+
+            };
+            using (var licenseStream = new MemoryStream())
+            {
+                license.Save(licenseStream);
+                dbLicense.LicenseFile = licenseStream.ToArray();
+            }
+            _context.Licenses.Add(dbLicense);
+            _context.SaveChanges();
             return dbLicense;
         }
     }

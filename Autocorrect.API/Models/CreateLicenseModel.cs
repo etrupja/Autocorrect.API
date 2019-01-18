@@ -13,5 +13,6 @@ namespace Autocorrect.API.Models
         [Required]
         public string Name { get; set; }
         public int MaximumUtilizationCount { get; set; } = 1;
+        public string Token { get; set; }
     }
 }
