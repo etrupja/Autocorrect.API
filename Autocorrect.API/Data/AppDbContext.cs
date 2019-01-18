@@ -13,6 +13,7 @@ namespace Autocorrect.API.Data
         public AppDbContext(DbContextOptions options) : base(options){
         }
         public DbSet<SpecialWord> SpecialWords { get; set; }
+        public DbSet<SuggestedWord> SuggestedWords { get; set; }
         public DbSet<Licenses> Licenses { get; set; }
     }
 }
